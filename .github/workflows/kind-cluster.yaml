@@ -12,7 +12,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@master
-
+      - name: Install dependencies for setup-kind
+        run: npm install -g json5
       - name: Setup Kind
         uses: engineerd/setup-kind@v0.6.0
         with:
