@@ -46,7 +46,7 @@ jobs:
           # done
 
           # kubectl wait pod --all --for=condition=Ready --all-namespaces --timeout=10m
-          kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=300s -n korifi-installer
+          kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=10m -n korifi-installer
           echo "All pods are ready."
           kubectl get pods --all-namespaces
 
