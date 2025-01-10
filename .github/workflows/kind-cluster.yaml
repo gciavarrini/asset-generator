@@ -33,6 +33,19 @@ jobs:
       - name: Verify Korifi Installation
         run: |
           echo "Waiting for all pods to be ready..."
-          kubectl wait --for=condition=ready pod --all-namespaces --timeout=10m
+
+          while ! kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; do
+            sleep 5
+          done
+
+          kubectl wait pod --all --for=condition=Ready --all-namespaces --timeout=10m
           echo "All pods are ready."
           kubectl get pods --all-namespaces
+
+
+
+    # korifi-installer
+    # cert-manager
+    # local-path-storage
+    # kpack
+    # project-contour
