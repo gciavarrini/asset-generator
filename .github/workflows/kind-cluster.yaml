@@ -99,7 +99,7 @@ jobs:
       - name: Get Korifi API Endpoint
         id: korifi-endpoint
         run: |
-          KUBERNETES_SERVICE_IP=$(kubectl get service korifi-api -n korifi-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          KUBERNETES_SERVICE_IP=$(kubectl get service korifi-api -n korifi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           if [[ -z "$KUBERNETES_SERVICE_IP" ]]; then
             echo "❌ Korifi API service IP not found. Is the LoadBalancer configured?"
             exit 1
