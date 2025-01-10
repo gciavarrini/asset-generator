@@ -91,6 +91,9 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
           sudo apt-get update
           sudo apt-get install cf8-cli
+      - name: Expose Korifi API via NodePort
+        run: |
+          kubectl patch svc korifi-api-svc -n korifi --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
 
       - name: Test Korifi
         run: |
@@ -98,7 +101,9 @@ jobs:
           NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
           NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
           echo http://$NODE_IP:$NODE_PORT
-          cf api http://$NODE_IP:$NODE_PORT --skip-ssl-validation
+          kubectl get svc korifi-api-svc -n korifi -o jsonpath='{.spec.ports[0].nodePort}'
+          curl -k http://127.0.0.1:30050 # Test API endpoint
+          cf api http://127.0.0.1:30050  --skip-ssl-validation
       #     CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
       #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
       #     cf api "$CF_API_ENDPOINT" --skip-ssl-validation
