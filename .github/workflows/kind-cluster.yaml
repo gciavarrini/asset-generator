@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Workaround for https://github.com/nektos/act/issues/107
-      - run: sudo id
+      # - run: sudo id
 
       - name: Checkout code
         uses: actions/checkout@master
