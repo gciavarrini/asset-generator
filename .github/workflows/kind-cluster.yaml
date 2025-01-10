@@ -64,14 +64,8 @@ jobs:
           START_TIME=$(date +%s)
 
           while true; do
-            echo "---- list pods--- "
-            kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}'
-            echo "---- list pods with wc -w --- "
-            kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -w 
             TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -w)
-            echo "total pods: $TOTAL_POD_COUNT"
             if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
-              echo "✅ There are pods in korifi ns."
               break
             fi
 
@@ -86,16 +80,9 @@ jobs:
 
             echo "⏳ Waiting for Korifi pods to become ready..."
             sleep 5
-            kubectl get pods -n korifi
-            echo "with label"
-            kubectl get pods -n korifi -l app=korifi-api
           done
-      - name: Wait for Korifi API
-        run: |
-          echo "🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆"
-          kubectl get pods -n korifi 
-          kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
+          kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
 
       - name: Install cf CLI
@@ -111,7 +98,7 @@ jobs:
           NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
           NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
           echo http://$NODE_IP:$NODE_PORT
-          cf api localhost --skip-ssl-validation
+          cf api http://$NODE_IP:$NODE_PORT --skip-ssl-validation
       #     CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
       #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
       #     cf api "$CF_API_ENDPOINT" --skip-ssl-validation
