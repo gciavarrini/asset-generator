@@ -36,8 +36,10 @@ jobs:
           echo "⏳ Waiting for Korifi installation to complete (up to 10 minutes)..."
           sleep 2
           kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=5m -n korifi-installer
-          MAX_RETRIES=120 # 10 minutes (120 * 5 seconds)
+          MAX_RETRIES=60 # 5 minutes (60 * 5 seconds)
           RETRY_COUNT=0
+          echo "🕖 Korifi is starting up..."
+
           while [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; do
             if kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; then
               echo "✅ Korifi is ready"
@@ -46,17 +48,12 @@ jobs:
 
             RETRY_COUNT=$((RETRY_COUNT + 1))
             sleep 5
-            # echo "🕖 Korifi is starting up... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
           done
-      - name: Install cf CLI
-        run: |
-          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
-          echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-          sudo apt-get update
-          sudo apt-get install cf8-cli
-      
+
       - name: Wait for Korifi API
-        run: kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
+        run: |
+          kubectl get pods -n korifi 
+          kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
       - name: Get Korifi API Endpoint
         id: korifi-endpoint
@@ -67,6 +64,14 @@ jobs:
             exit 1
           fi
           echo "::set-output name=endpoint::https://$KUBERNETES_SERVICE_IP:30050"
+
+      - name: Install cf CLI
+        run: |
+          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+          sudo apt-get update
+          sudo apt-get install cf8-cli
+
       - name: Test Korifi
         run: |
           echo "Target Korifi API"
