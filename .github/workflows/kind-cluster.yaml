@@ -66,7 +66,7 @@ jobs:
           while true; do
             kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -l
             TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -l)
-            echo "total pods: "$TOTAL_POD_COUNT"
+            echo "total pods: $TOTAL_POD_COUNT"
             if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
               echo "✅ There are pods in korifi ns."
               break
