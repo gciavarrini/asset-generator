@@ -28,7 +28,6 @@ jobs:
       
       - name: Install Korifi
         run: |
-          kubectl cluster-info --context kind-korifi-cluster
           kubectl apply -f https://github.com/cloudfoundry/korifi/releases/latest/download/install-korifi-kind.yaml
 
       - name: Verify Korifi Installation
