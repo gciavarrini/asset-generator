@@ -5,7 +5,7 @@ on:
 
 jobs:
   setup-and-install:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       # Workaround for https://github.com/nektos/act/issues/107
       - run: sudo id
@@ -32,30 +32,39 @@ jobs:
 
       - name: Verify Korifi Installation
         run: |
-          echo "Waiting for all pods to be ready..."
-
-          # while ! [ -n "$(oc get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}')" ]; do
-          #   echo "Waiting for pod korifi-installer to exist..."
-          #   sleep 5
-          # done
-          sleep 10
-          kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=10m -n korifi-installer
+          echo "⏳ Waiting for Korifi installation to complete (up to 10 minutes)...""
+          sleep 2
+          kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=5m -n korifi-installer
 
           while ! kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; do
             sleep 5
-            echo "retry"
-            kubectl get pods --all-namespaces
+            echo "🕖 Korifi is starting up...""
           done
+          echo "✅ Korifi is ready"
+      - name: Install cf CLI
+        run: |
+          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+          sudo apt-get update
+          sudo apt-get install cf8-cli
+ 
+      - name: Test Korifi
+        run: |
+          echo "Target Korifi API"
+          cf api https://localhost --skip-ssl-validation
+          echo "Authenticate as the cf admin user"
+          cf auth kind-korifi
+          echo "Create and target an org and a space"
+          cf create-org org && cf create-space -o org space && cf target -o org
+          echo "Push a docker app and access it"
+          cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
+          curl -k 
+          CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
 
-          # kubectl wait pod --all --for=condition=Ready --all-namespaces --timeout=10m
-          # kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=10m -n korifi-installer
-          echo "All pods are ready."
-          kubectl get pods --all-namespaces
+          if [[ $CURL_STATUS_CODE != 200 ]]; then
+            echo "❌ Nginx application failed health check. Status code: $CURL_STATUS_CODE"
+            exit 1
+          fi
 
+          echo "✅ Nginx application is healthy."
 
-
-    # korifi-installer
-    # cert-manager
-    # local-path-storage
-    # kpack
-    # project-contour
