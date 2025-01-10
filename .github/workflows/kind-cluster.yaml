@@ -16,15 +16,24 @@ jobs:
       - name: Setup Kind
         uses: engineerd/setup-kind@v0.6.2
         with:
-          # version: "v0.24.0"
+          version: "v0.24.0"
           name: korifi
           config: hack/kind-config.yaml
       
-      - name: Testing kubectl version
-        run: kubectl version
-      
-      - name: Testing KinD
+      - name: Validate KinD cluster creation
         run: |
           kubectl cluster-info
           kubectl version
           kubectl get pods -n kube-system
+      
+      - name: Install Korifi
+        run: |
+          kubectl cluster-info --context kind-korifi-cluster
+          kubectl apply -f https://github.com/cloudfoundry/korifi/releases/latest/download/install-korifi-kind.yaml
+
+      - name: Verify Korifi Installation
+        run: |
+          echo "Waiting for all pods to be ready..."
+          kubectl wait --for=condition=ready pod --all-namespaces --timeout=10m
+          echo "All pods are ready."
+          kubectl get pods --all-namespaces
