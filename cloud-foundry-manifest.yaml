@@ -1,0 +1,99 @@
+applications:
+  - name: string  # Required. Application name (1-64 characters)
+    buildpacks:  # Optional. List of buildpacks
+      - string  # Can be URLs, Git repos, or buildpack names
+    command: string  # Optional. Startup command
+    default-route: boolean  # Optional. Use default routing
+    disk_quota: string  # Optional. Disk space (e.g., "1024M", "2G")
+    docker:  # Optional. Docker image configuration
+      image: string  # Docker image name
+      username: string  # Registry username
+      password: string  # Registry password
+      cache: boolean  # Enable/disable layer caching
+      entrypoint: string  # Custom entrypoint
+      command: string  # Custom command
+      ports: # Port mappings
+        - 8080/tcp
+    domains:  # Optional. List of domains
+      - string
+    env:  # Optional. Environment variables
+      VAR_NAME: value
+      variables:  # Structured environment variables
+        key: value
+      system-env-json:  # System-provided environment variables
+        key: value
+    health-check-http-endpoint: string  # Optional. HTTP health check endpoint
+    health-check-invocation-timeout: integer  # Optional. Timeout in seconds
+    health-check-type: string  # Optional. Type: port, process, http, none
+    health-check-timeout: integer  # Optional. Overall health check timeout
+    hooks:  # Optional. Lifecycle hooks
+      pre-start: string
+      post-start: string
+      pre-stop: string
+      post-stop: string
+    instances: integer  # Optional. Number of instances (0-64)
+    memory: string  # Optional. Memory limit
+    memory-threshold: integer  # Optional. Memory threshold percentage
+    metadata:  # Optional. Resource metadata
+      labels:  # Key-value pairs
+        key: value
+      annotations:  # Arbitrary metadata
+        key: value
+    network-policies:  # Optional. Container-to-container networking
+      - destination: string
+        protocol: string  # tcp/udp
+        ports: string  # Port range (e.g., "8080-8090")
+    no-route: boolean  # Optional. Disable route creation
+    path: string  # Optional. Application path
+    processes:  # Optional. Process-specific configurations
+      - type: string  # Process type (web, worker, etc.)
+        command: string
+        disk_quota: string
+        health-check-http-endpoint: string
+        health-check-invocation-timeout: integer
+        health-check-type: string
+        health-check-timeout: integer
+        instances: integer
+        memory: string
+        memory-threshold: integer
+        timeout: integer
+        hooks:
+          pre-start: string
+          post-start: string
+          pre-stop: string
+          post-stop: string
+    random-route: boolean  # Optional. Create random route
+    routes:  # Optional. Custom routing configuration
+      - route: string  # URL pattern
+        protocol: string  # Protocol (http1, http2)
+        endpoint: string  # Custom endpoint
+        no-hostname: boolean  # Remove hostname
+        domain: string  # Override domain
+        port: integer  # TCP routing port
+    services:  # Optional. Service bindings
+      - string  # Service instance name
+        binding-name: string  # Custom binding name
+        parameters: object  # Binding parameters
+        tags: [string]  # Service tags
+    sidecars:  # Optional. Sidecar processes
+      - name: string
+        command: string
+        memory: string
+        process_types: [string]
+    stack: string  # Optional. Stack name
+    timeout: integer  # Optional. Startup timeout (seconds)
+    strategy: string  # Optional. Deployment strategy (rolling, recreate)
+    staged_timeout: integer  # Optional. Staging timeout
+    staging_failed_reason: string  # Optional. Custom staging failure message
+    state: string  # Optional. Desired app state (started, stopped)
+    variables:  # Optional. Variables available during staging
+      key: value
+    allow-migration: boolean  # Optional. Allow platform migration
+    app-ports: [integer]  # Optional. Ports app listens on
+    app-log-rate-limit-per-instance: string  # Optional. Log rate limit
+    create-app-manifest: boolean  # Optional. Generate manifest on deploy
+    manifest-strategy: string  # Optional. How to handle missing fields
+    ports: [integer]  # Optional. Exposed container ports
+    ssh-client-key: string  # Optional. SSH client key
+    ssh-client-cert: string  # Optional. SSH client cert
+    ssh-known-hosts: string  # Optional. SSH known hosts

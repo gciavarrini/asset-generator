@@ -1,0 +1,140 @@
+# Cloud Foundry V3 to Intermediate Schema Mapping Guide
+# Format: CF_FIELD: intermediate_field (rationale)
+
+applications:
+  # Core Application Fields
+  name: application.name
+    # Direct mapping as application name is a fundamental identifier
+  
+  buildpacks:
+    # Complex transformation required
+    # Maps to runtime configuration based on buildpack analysis:
+    runtime.language: 
+      # Derived from primary buildpack
+      # Example: 'nodejs_buildpack' -> language: 'nodejs'
+    runtime.version:
+      # Extracted from buildpack version specifications
+      # Example: 'nodejs_buildpack:18' -> version: '18'
+    runtime.build:
+      # Always set to source build initially
+      method: source
+      # Build commands extracted from buildpack detection scripts
+      source.build_command: # derived from buildpack build command
+      source.dependencies: # derived from buildpack dependencies
+    
+  command: application.runtime.start_command
+    # Direct mapping for startup command
+  
+  disk_quota: application.compute.disk
+    # Direct mapping with unit standardization
+  
+  memory: application.compute.memory
+    # Direct mapping with unit standardization
+  
+  instances: application.instances.count
+    # Direct mapping for static instance count
+  
+  health-check-type: application.runtime.health_check.mechanism
+    # Direct mapping with standardized enumeration
+  
+  health-check-http-endpoint: application.runtime.health_check.endpoint
+    # Direct mapping for HTTP health check endpoint
+  
+  timeout: application.runtime.health_check.timeout_seconds
+    # Converted to explicit seconds for clarity
+  
+  # Route Configuration
+  routes:
+    - route: application.network.routes[].{hostname,domain,path}
+      # Split CF route string into structured components
+      # Makes route management more explicit
+  
+  # Service Bindings
+  services: application.services
+    # Direct mapping with enhanced structure
+    # Added version field for better dependency management
+  
+  # Environment Configuration
+  env: application.environment.variables
+    # Direct mapping for environment variables
+
+  # NOT MAPPED CF FIELDS (with rationale):
+  
+  stack: NOT_MAPPED
+    # Reason: Stack is CF-specific implementation detail
+    # Runtime requirements handled through runtime.build configuration
+  
+  docker: 
+    # Maps differently:
+    runtime.build:
+      method: container
+      container:
+        image: # from docker.image
+        registry: # from docker.registry
+    # Container configuration is made platform-agnostic
+  
+  processes: NOT_MAPPED
+    # Reason: Process types are CF-specific
+    # Basic process information captured in runtime.start_command
+  
+  metadata.annotations['cloudfoundry.*']: NOT_MAPPED
+    # Reason: CF-specific metadata
+    # Generic metadata can use metadata.annotations
+  
+  sidecars: NOT_MAPPED
+    # Reason: Implementation-specific feature
+    # Should be handled by target platform's native capabilities
+
+  # Special Transformation Notes:
+  
+  # 1. Buildpack Transformation:
+  # - Analyze buildpack type to determine language and version
+  # - Extract build requirements from buildpack
+  # - Convert to platform-agnostic build configuration
+  # Example:
+  #   CF: buildpacks: ['nodejs_buildpack:18']
+  #   Intermediate:
+  #     runtime:
+  #       language: nodejs
+  #       version: '18'
+  #       build:
+  #         method: source
+  #         source:
+  #           dependencies: ['npm']
+  
+  # 2. Service Bindings:
+  # - CF service instances -> generic service definitions
+  # - Credentials moved to protected_variables
+  # - Service types standardized
+  
+  # 3. Environment Variables:
+  # - Remove CF-specific variables (VCAP_*)
+  # - Move sensitive data to protected_variables
+  # - Standardize common variable names
+  
+  # 4. Build Configuration:
+  # - Convert buildpack detection to explicit build requirements
+  # - Transform binary buildpacks to container builds
+  # - Preserve build-time dependencies
+  
+  # Migration Recommendations:
+  
+  # 1. Runtime Analysis:
+  # - Analyze buildpack requirements
+  # - Document language and version requirements
+  # - Extract build dependencies
+  
+  # 2. Service Migration:
+  # - Identify service types and versions
+  # - Document service requirements
+  # - Plan credential management
+  
+  # 3. Build Process:
+  # - Determine appropriate build method
+  # - Document build steps
+  # - Identify required dependencies
+  
+  # 4. Environment Setup:
+  # - Review for platform-specific variables
+  # - Plan credential migration
+  # - Document environment requirements
