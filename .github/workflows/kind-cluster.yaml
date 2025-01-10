@@ -96,26 +96,22 @@ jobs:
           kubectl get pods -n korifi 
           kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
-      - name: Get Korifi API Endpoint
-        id: korifi-endpoint
+
+
+      - name: Install cf CLI
         run: |
-          KUBERNETES_SERVICE_IP=$(kubectl get service korifi-api -n korifi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          if [[ -z "$KUBERNETES_SERVICE_IP" ]]; then
-            echo "❌ Korifi API service IP not found. Is the LoadBalancer configured?"
-            exit 1
-          fi
-          echo "::set-output name=endpoint::https://$KUBERNETES_SERVICE_IP:30050"
+          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+          sudo apt-get update
+          sudo apt-get install cf8-cli
 
-      # - name: Install cf CLI
-      #   run: |
-      #     wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
-      #     echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-      #     sudo apt-get update
-      #     sudo apt-get install cf8-cli
-
-      # - name: Test Korifi
-      #   run: |
-      #     echo "Target Korifi API"
+      - name: Test Korifi
+        run: |
+          echo "Target Korifi API"
+          NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
+          NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+          echo http://$NODE_IP:$NODE_PORT
+          cf api localhost --skip-ssl-validation
       #     CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
       #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
       #     cf api "$CF_API_ENDPOINT" --skip-ssl-validation
