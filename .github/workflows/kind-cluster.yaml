@@ -5,7 +5,7 @@ on:
 
 jobs:
   setup-and-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # Workaround for https://github.com/nektos/act/issues/107
       - run: sudo id
