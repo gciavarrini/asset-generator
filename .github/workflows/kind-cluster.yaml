@@ -98,11 +98,22 @@ jobs:
       - name: Test Korifi
         run: |
           echo "Target Korifi API"
-          NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
-          NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
-          echo http://$NODE_IP:$NODE_PORT
-          kubectl get svc korifi-api-svc -n korifi -o jsonpath='{.spec.ports[0].nodePort}'
-          curl -k http://127.0.0.1:30050 # Test API endpoint
+          
+          # Get Korifi API NodePort and Node IP
+          NODE_PORT=$(kubectl get svc korifi-api-svc -n korifi -o jsonpath="{.spec.ports[0].nodePort}")
+          NODE_IP=$(kubectl get nodes --namespace korifi -o jsonpath="{.items[0].status.addresses[0].address}")
+
+          # Debug: Print the calculated values
+          echo "Korifi API NodePort: $NODE_PORT"
+          echo "Korifi API Node IP: $NODE_IP"
+
+          # Test the endpoint using curl
+          echo "Testing Korifi API with curl..."
+          curl -k http://$NODE_IP:$NODE_PORT
+
+          # Test the endpoint using cf cli
+          echo "Testing Korifi API with cf CLI..."
+          cf api http://$NODE_IP:$NODE_PORT --skip-ssl-validation
           cf api http://127.0.0.1:30050  --skip-ssl-validation
       #     CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
       #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
