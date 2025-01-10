@@ -32,7 +32,7 @@ jobs:
 
       - name: Verify Korifi Installation
         run: |
-          echo "⏳ Waiting for Korifi installation to complete (up to 10 minutes)...""
+          echo "⏳ Waiting for Korifi installation to complete (up to 10 minutes)..."
           sleep 2
           kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=5m -n korifi-installer
 
