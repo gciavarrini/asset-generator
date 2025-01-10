@@ -38,7 +38,8 @@ jobs:
           #   echo "Waiting for pod korifi-installer to exist..."
           #   sleep 5
           # done
-          kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=10m -n korifi-installer
+          sleep 10
+          kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=10m -n korifi-installer
 
           while ! kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; do
             sleep 5
