@@ -56,7 +56,7 @@ jobs:
           kubectl get pods -n korifi 
           kubectl get ns
           kubectl get pods -A
-          
+
       - name: Wait for Korifi Pods
         run: |
           echo "Waiting for Korifi pods to become ready..."
@@ -66,7 +66,7 @@ jobs:
           while true; do
             TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -l)
 
-            if [[ "$READY_POD_COUNT" -gt 0 ]]; then
+            if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
               echo "✅ There are pods in korifi ns."
               break
             fi
