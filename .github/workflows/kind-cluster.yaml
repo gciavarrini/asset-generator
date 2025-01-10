@@ -45,7 +45,7 @@ jobs:
 
             RETRY_COUNT=$((RETRY_COUNT + 1))
             sleep 5
-            echo "🕖 Korifi is starting up... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+            # echo "🕖 Korifi is starting up... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
           done
       - name: Install cf CLI
         run: |
@@ -53,31 +53,58 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
           sudo apt-get update
           sudo apt-get install cf8-cli
- 
+      
+      - name: Wait for Korifi API
+        run: kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi-system --timeout=5m
+
+      - name: Get Korifi API Endpoint
+        id: korifi-endpoint
+        run: |
+          KUBERNETES_SERVICE_IP=$(kubectl get service korifi-api -n korifi-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [[ -z "$KUBERNETES_SERVICE_IP" ]]; then
+            echo "❌ Korifi API service IP not found. Is the LoadBalancer configured?"
+            exit 1
+          fi
+          echo "::set-output name=endpoint::https://$KUBERNETES_SERVICE_IP:30050"
       - name: Test Korifi
         run: |
           echo "Target Korifi API"
-          export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
-          export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
-          echo http://$NODE_IP:$NODE_PORT
-          cf api
-          CF_API_ENDPOINT="https://host.docker.internal" # Or your host's IP
+          CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
           echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
           cf api "$CF_API_ENDPOINT" --skip-ssl-validation
-          # cf api https://localhost --skip-ssl-validation
-          # echo "Authenticate as the cf admin user"
-          # cf auth kind-korifi
-          # echo "Create and target an org and a space"
-          # cf create-org org && cf create-space -o org space && cf target -o org
-          # echo "Push a docker app and access it"
-          # cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
-          # curl -k 
-          # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
+          cf auth kind-korifi
+          cf create-org test-org
+          cf create-space -o test-org test-space
+          cf target -o test-org -s test-space
+          cf push hello-world --docker-image nginxinc/nginx-unprivileged:1.23.2
+          # add curl check here
+          echo "pushed to check still"
 
-          # if [[ $CURL_STATUS_CODE != 200 ]]; then
-          #   echo "❌ Nginx application failed health check. Status code: $CURL_STATUS_CODE"
-          #   exit 1
-          # fi
+      # - name: Test Korifi
+      #   run: |
+          
+      #     echo "Target Korifi API"
+      #     export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services localregistry-docker-registry)
+      #     export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+      #     echo http://$NODE_IP:$NODE_PORT
+      #     cf api
+      #     CF_API_ENDPOINT="https://host.docker.internal" # Or your host's IP
+      #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
+      #     cf api "$CF_API_ENDPOINT" --skip-ssl-validation
+      #     # cf api https://localhost --skip-ssl-validation
+      #     # echo "Authenticate as the cf admin user"
+      #     # cf auth kind-korifi
+      #     # echo "Create and target an org and a space"
+      #     # cf create-org org && cf create-space -o org space && cf target -o org
+      #     # echo "Push a docker app and access it"
+      #     # cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
+      #     # curl -k 
+      #     # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
 
-          # echo "✅ Nginx application is healthy."
+      #     # if [[ $CURL_STATUS_CODE != 200 ]]; then
+      #     #   echo "❌ Nginx application failed health check. Status code: $CURL_STATUS_CODE"
+      #     #   exit 1
+      #     # fi
+
+      #     # echo "✅ Nginx application is healthy."
 
