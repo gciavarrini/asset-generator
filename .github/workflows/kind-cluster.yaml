@@ -61,10 +61,10 @@ jobs:
           export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
           echo http://$NODE_IP:$NODE_PORT
           cf api
-          # CF_API_ENDPOINT="https://host.docker.internal" # Or your host's IP
-          # echo "CF_API_ENDPOINT: $CF_API_ENDPOINT""
-          # cf api "$CF_API_ENDPOINT" --skip-ssl-validation
-          cf api https://localhost --skip-ssl-validation
+          CF_API_ENDPOINT="https://host.docker.internal" # Or your host's IP
+          echo "CF_API_ENDPOINT: $CF_API_ENDPOINT""
+          cf api "$CF_API_ENDPOINT" --skip-ssl-validation
+          # cf api https://localhost --skip-ssl-validation
           # echo "Authenticate as the cf admin user"
           # cf auth kind-korifi
           # echo "Create and target an org and a space"
