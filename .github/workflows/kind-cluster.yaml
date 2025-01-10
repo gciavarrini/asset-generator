@@ -64,8 +64,9 @@ jobs:
           START_TIME=$(date +%s)
 
           while true; do
+            kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -l
             TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -l)
-
+            echo "total pods: "$TOTAL_POD_COUNT"
             if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
               echo "✅ There are pods in korifi ns."
               break
@@ -83,6 +84,8 @@ jobs:
             echo "⏳ Waiting for Korifi pods to become ready..."
             sleep 5
             kubectl get pods -n korifi
+            echo "with label"
+            kubectl get pods -n korifi -l app=korifi-api
           done
       - name: Wait for Korifi API
         run: |
