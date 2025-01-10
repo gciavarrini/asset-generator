@@ -50,8 +50,15 @@ jobs:
             sleep 5
           done
 
+      - name: Debug
+        run: |
+          echo "🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆"
+          kubectl get pods -n korifi 
+          kubectl get ns
+          kubectl get pods -A
       - name: Wait for Korifi API
         run: |
+          echo "🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆🎆"
           kubectl get pods -n korifi 
           kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
