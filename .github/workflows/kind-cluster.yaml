@@ -25,6 +25,7 @@ jobs:
           kubectl cluster-info
           kubectl version
           kubectl get pods -n kube-system
+          kubectl wait --for=condition=Ready pods --all -n kube-system
       
       - name: Install Korifi
         run: |
@@ -55,7 +56,7 @@ jobs:
           sudo apt-get install cf8-cli
       
       - name: Wait for Korifi API
-        run: kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi-system --timeout=5m
+        run: kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
 
       - name: Get Korifi API Endpoint
         id: korifi-endpoint
