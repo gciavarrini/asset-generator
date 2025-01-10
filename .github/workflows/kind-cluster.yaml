@@ -39,7 +39,7 @@ jobs:
           while ! kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; do
             sleep 5
             echo "🕖 Korifi is starting up...""
-            oc get pods -n korifi-installer
+            kubectl get pods -n korifi-installer
           done
 
           echo "✅ Korifi is ready"
