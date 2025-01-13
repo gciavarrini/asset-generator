@@ -106,6 +106,18 @@ jobs:
           echo "Verifying Korifi API service..."
           kubectl get svc korifi-api-svc -n korifi -o yaml
           
+
+          # Configure hosts file to map localhost to Node IP
+          echo "$NODE_IP localhost" | sudo tee -a /etc/hosts
+          
+          # Test the endpoint using curl
+          echo "Testing Korifi API with curl..."
+          curl -k https://$NODE_IP:$NODE_PORT
+          
+          # Verify hosts file update
+          echo "Checking hosts file configuration..."
+          cat /etc/hosts
+          
           # Test DNS resolution
           echo "Testing DNS resolution..."
           nslookup localhost || true
