@@ -109,11 +109,11 @@ jobs:
 
           # Test the endpoint using curl
           echo "Testing Korifi API with curl..."
-          curl -k http://$NODE_IP:$NODE_PORT 
+          curl -k https://$NODE_IP:$NODE_PORT 
 
           # Test the endpoint using cf cli
           echo "Testing Korifi API with cf CLI..."
-          cf api http://$NODE_IP:$NODE_PORT --skip-ssl-validation
+          cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
       # cf api http://127.0.0.1:30050  --skip-ssl-validation
       #     CF_API_ENDPOINT="${{ steps.korifi-endpoint.outputs.endpoint }}"
       #     echo "CF_API_ENDPOINT: $CF_API_ENDPOINT"
