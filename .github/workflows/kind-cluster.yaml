@@ -107,6 +107,12 @@ jobs:
           cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
           cf auth kind-korifi
           cf create-org org && cf create-space -o org space && cf target -o org -s space
+          # Verify cf domains
+          cf domains
+          cf create-shared-domain apps-127-0-0-1.nip.io --internal
+          # Configure hosts file to map localhost to Node IP
+          echo "$NODE_IP localhost" | sudo tee -a /etc/hosts
+          cat /etc/hosts
           cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
 
