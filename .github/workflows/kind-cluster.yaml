@@ -27,7 +27,7 @@ jobs:
           kubectl get pods -n kube-system
           kubectl wait --for=condition=Ready pods --all -n kube-system
       
-      - name: Install Korifi
+      - name: Deploy Korifi
         run: |
           kubectl apply -f https://github.com/cloudfoundry/korifi/releases/latest/download/install-korifi-kind.yaml
 
@@ -109,7 +109,9 @@ jobs:
           cf create-org org && cf create-space -o org space && cf target -o org
           # Verify cf domains
           cf domains
-          # cf create-shared-domain apps-127-0-0-1.nip.io --internal
+          cf create-private-domain org apps-127-0-0-1.nip.io --internal
+          cf domains
+
           # Configure hosts file to map localhost to Node IP
           echo "$NODE_IP localhost" | sudo tee -a /etc/hosts
           cat /etc/hosts
