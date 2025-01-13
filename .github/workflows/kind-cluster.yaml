@@ -113,8 +113,9 @@ jobs:
           cf domains
 
           # Configure hosts file to map localhost to Node IP
-          echo "$NODE_IP localhost" | sudo tee -a /etc/hosts
+          echo "$NODE_IP apps-127-0-0-1.nip.io" | sudo tee -a /etc/hosts
           cat /etc/hosts
+          
           cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
 
