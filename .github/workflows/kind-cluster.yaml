@@ -115,9 +115,7 @@ jobs:
           echo "Testing Korifi API with cf CLI..."
           cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
           cf auth kind-korifi
-          cf create-org test-org
-          cf create-space -o test-org test-space
-          cf target -o test-org -s test-space
+          cf create-org org && cf create-space -o org space && cf target -o org
           cf push hello-world --docker-image nginxinc/nginx-unprivileged:1.23.2
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
       # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
