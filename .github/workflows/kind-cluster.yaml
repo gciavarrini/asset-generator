@@ -101,35 +101,15 @@ jobs:
           # Test the endpoint using curl
           echo "Testing Korifi API with curl..."
           curl -k -i https://$NODE_IP:$NODE_PORT 
-
-          # Ensure the Korifi API service is ready
-          echo "Verifying Korifi API service..."
-          kubectl get svc korifi-api-svc -n korifi -o yaml
-          
-
-          # Configure hosts file to map localhost to Node IP
-          echo "$NODE_IP localhost" | sudo tee -a /etc/hosts
-          
-          # Test the endpoint using curl
-          echo "Testing Korifi API with curl..."
-          curl -k https://$NODE_IP:$NODE_PORT
-          
-          # Verify hosts file update
-          echo "Checking hosts file configuration..."
-          cat /etc/hosts
-          
-          # Test DNS resolution
-          echo "Testing DNS resolution..."
-          nslookup localhost || true
-
+         
           # Test the endpoint using cf cli
           echo "Testing Korifi API with cf CLI..."
           cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
           cf auth kind-korifi
           cf create-org org && cf create-space -o org space && cf target -o org -s space
-          cf create-shared-domain apps-127-0-0-1.nip.io
-          CF_TRACE=true cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
+          CF_TRACE=true cf push nginx --docker-image https://nginx.apps-127-0-0-1.nip.io
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
+
       # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
       #     # add curl check here
       #     echo "pushed to check still"
