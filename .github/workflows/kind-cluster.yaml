@@ -109,7 +109,7 @@ jobs:
           cf create-org org && cf create-space -o org space && cf target -o org
           # Verify cf domains
           cf domains
-          cf create-private-domain org apps-127-0-0-1.nip.io --internal
+          cf create-private-domain org apps-127-0-0-1.nip.io
           cf domains
 
           # Configure hosts file to map localhost to Node IP
