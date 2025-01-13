@@ -107,7 +107,7 @@ jobs:
           cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
           cf auth kind-korifi
           cf create-org org && cf create-space -o org space && cf target -o org -s space
-          CF_TRACE=true cf push nginx --docker-image https://nginx.apps-127-0-0-1.nip.io
+          cf push nginx --docker-image https://nginx.apps-127-0-0-1.nip.io
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
 
       # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
