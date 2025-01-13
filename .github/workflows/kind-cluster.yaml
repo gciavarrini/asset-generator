@@ -93,7 +93,7 @@ jobs:
           # Get Korifi API NodePort and Node IP
           NODE_PORT=$(kubectl get svc korifi-api-svc -n korifi -o jsonpath="{.spec.ports[0].nodePort}")
           NODE_IP=$(kubectl get nodes --namespace korifi -o jsonpath="{.items[0].status.addresses[0].address}")
-          export CF_API="https://$NODE_IP:$NODE_PORT"
+          CF_API="https://$NODE_IP:$NODE_PORT"
           # Debug: Print the calculated values
           echo "Korifi API NodePort: $NODE_PORT"
           echo "Korifi API Node IP: $NODE_IP"
@@ -104,19 +104,32 @@ jobs:
          
           # Test the endpoint using cf cli
           echo "Testing Korifi API with cf CLI..."
+          echo "cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation"
           cf api https://$NODE_IP:$NODE_PORT --skip-ssl-validation
+          echo "cf auth kind-korifi"
           cf auth kind-korifi
+
           cf create-org org && cf create-space -o org space && cf target -o org
-          # Verify cf domains
+
+          echo "Verify cf domains"
           cf domains
           cf create-shared-domain apps-127-0-0-1.nip.io
+
+          echo "domains:"
           cf domains
+          echo "target: "
+          cf target
 
           # Configure hosts file to map localhost to Node IP
           echo "$NODE_IP apps-127-0-0-1.nip.io" | sudo tee -a /etc/hosts
           cat /etc/hosts
-          
+          echo "curl -k -i https://$NODE_IP:$NODE_PORT "
+          curl -k -i https://$NODE_IP:$NODE_PORT 
+
+
           cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
+
+
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
 
       # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
