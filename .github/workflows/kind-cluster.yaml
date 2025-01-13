@@ -54,7 +54,7 @@ jobs:
           if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
             kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
           fi
-          echo "✅ Korifi pods and services are ready!"
+          echo "✅ Korifi pods are ready!"
 
           echo "⏳ Waiting for Korifi API service..."
           TIMEOUT=300 # 5 minutes timeout in seconds
@@ -100,7 +100,15 @@ jobs:
 
           # Test the endpoint using curl
           echo "Testing Korifi API with curl..."
-          curl -k https://$NODE_IP:$NODE_PORT 
+          curl -k -i https://$NODE_IP:$NODE_PORT 
+
+          # Ensure the Korifi API service is ready
+          echo "Verifying Korifi API service..."
+          kubectl get svc korifi-api-svc -n korifi -o yaml
+          
+          # Test DNS resolution
+          echo "Testing DNS resolution..."
+          nslookup localhost || true
 
           # Test the endpoint using cf cli
           echo "Testing Korifi API with cf CLI..."
@@ -108,7 +116,7 @@ jobs:
           cf auth kind-korifi
           cf create-org org && cf create-space -o org space && cf target -o org -s space
           cf create-shared-domain apps-127-0-0-1.nip.io
-          cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
+          CF_TRACE=true cf push nginx --docker-image nginxinc/nginx-unprivileged:1.23.2
           curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io
       # CURL_STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://nginx.apps-127-0-0-1.nip.io)
       #     # add curl check here
