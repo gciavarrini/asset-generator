@@ -36,53 +36,55 @@ jobs:
           echo "⏳ Waiting for Korifi installation to complete (up to 10 minutes)..."
           sleep 2
           kubectl wait --for=jsonpath='{.status.phase}'=Running pod/$(kubectl get pods -n korifi-installer -l job-name=install-korifi --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}') --timeout=5m -n korifi-installer
+          
           MAX_RETRIES=60 # 5 minutes (60 * 5 seconds)
           RETRY_COUNT=0
           echo "🕖 Korifi is starting up..."
-
           while [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; do
             if kubectl -n korifi-installer logs job/install-korifi | grep -q "Waiting for the local docker registry to start..."; then
-              echo "✅ Korifi is ready"
-              exit 0 # Success
+              echo "✅ Korifi installer is ready"
+              break
             fi
-
             RETRY_COUNT=$((RETRY_COUNT + 1))
             sleep 5
           done
+          
+          echo "⏳ Waiting for Korifi API pods..."
+          TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api -o jsonpath='{.items[*].metadata.name}' | wc -w)
+          if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
+            kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
+          fi
+          echo "✅ Korifi pods and services are ready!"
 
+          echo "⏳ Waiting for Korifi API service..."
           TIMEOUT=600 # 10 minutes timeout in seconds
           START_TIME=$(date +%s)
-
           while true; do
-            TOTAL_POD_COUNT=$(kubectl get pods -n korifi -l app=korifi-api  -o jsonpath='{.items[*].metadata.name}' | wc -w)
-            if [[ "$TOTAL_POD_COUNT" -gt 0 ]]; then
+            if kubectl get svc korifi-api-svc -n korifi >/dev/null 2>&1; then
+              echo "✅ Korifi API service found!"
               break
             fi
-
+            
             CURRENT_TIME=$(date +%s)
             ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
-
             if [[ $ELAPSED_TIME -ge $TIMEOUT ]]; then
-              echo "❌ Timeout waiting for Korifi pods to become ready."
-              kubectl get pods -n korifi
+              echo "❌ Timeout waiting for Korifi API service."
+              kubectl get svc -n korifi
               exit 1
             fi
-
             sleep 5
           done
 
-          kubectl wait --for=condition=ready pod -l app=korifi-api -n korifi --timeout=5m
-          echo "✅ Waiting for Korifi pods ready!"
-
+      - name: Expose Korifi API via NodePort
+        run: |
+            kubectl patch svc korifi-api-svc -n korifi --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
+  
       - name: Install cf CLI
         run: |
           wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cli.cloudfoundry.org.gpg
           echo "deb [signed-by=/usr/share/keyrings/cli.cloudfoundry.org.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
           sudo apt-get update
           sudo apt-get install cf8-cli
-      - name: Expose Korifi API via NodePort
-        run: |
-          kubectl patch svc korifi-api-svc -n korifi --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
 
       - name: Test Korifi
         run: |
